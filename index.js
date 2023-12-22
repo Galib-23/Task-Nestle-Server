@@ -10,7 +10,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ogz7mxs.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -31,7 +31,10 @@ async function run() {
 
 
         //-----------------------GETS---------------------
-
+        app.get('/tasks', async (req, res) => {
+            const result = await taskCollection.find().toArray();
+            res.send(result);
+        })
 
 
 
@@ -50,6 +53,32 @@ async function run() {
         app.post('/tasks', async (req, res) => {
             const task = req.body;
             const result = await taskCollection.insertOne(task);
+            res.send(result);
+        })
+
+
+        //--------------------------PATCHES--------------------
+        app.patch('/task/:id', async(req, res) => {
+            const task = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id)};
+            const updatedDoc = {
+                $set: {
+                    status: task.status
+                }
+            }
+            const result = await taskCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        })
+
+
+
+
+        //------------------------DELETE-----------------------
+        app.delete('/tasks/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id)};
+            const result = await taskCollection.deleteOne(query);
             res.send(result);
         })
 
